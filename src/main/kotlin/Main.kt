@@ -9,38 +9,51 @@ data class UserData(
     val firstName: String,
     val lastName: String,
     val username: String
-)
+) {
+    override fun toString(): String {
+        return "id: $id, firstName: $firstName, lastname: $lastName"
+    }
+}
 
-suspend fun main() {
-    val url = "https://webscraper.io/test-sites/tables/tables-semantically-correct"
+class WebScraper {
+    private val url = "https://webscraper.io/test-sites/tables/tables-semantically-correct"
+    private val userList = mutableListOf<UserData>()
 
-    HttpClient(CIO).use { client ->
-        val response: HttpResponse = client.get(url)
+    suspend fun connect() {
+        HttpClient(CIO).use { client ->
+            val response: HttpResponse = client.get(url)
 
-        val html = response.bodyAsText()
+            val html = response.bodyAsText()
 
-        val document = Jsoup.parse(html)
-        val table = document.select(".table-bordered").first()
+            val document = Jsoup.parse(html)
+            val table = document.select(".table-bordered").first()
 
-        val userList = mutableListOf<UserData>()
+            table?.select("tbody tr")?.forEach { row ->
+                val cells = row.select("td")
 
-        table?.select("tbody tr")?.forEach { row ->
-            val cells = row.select("td")
+                if (cells.size != 4) {
+                    return@forEach
+                }
 
-            if (cells.size != 4) {
-                return@forEach
+                val id = cells[0].text().toInt()
+                val firstName = cells[1].text()
+                val lastName = cells[2].text()
+                val username = cells[3].text()
+
+                userList.add(UserData(id, firstName, lastName, username))
             }
-
-            val id = cells[0].text().toInt()
-            val firstName = cells[1].text()
-            val lastName = cells[2].text()
-            val username = cells[3].text()
-
-            userList.add(UserData(id, firstName, lastName, username))
-        }
-
-        for (user in userList) {
-            println(user)
         }
     }
+
+    fun printResult() {
+        for (user in userList) {
+            println(user.toString())
+        }
+    }
+}
+
+suspend fun main() {
+    val webScraper = WebScraper()
+    webScraper.connect()
+    webScraper.printResult()
 }
