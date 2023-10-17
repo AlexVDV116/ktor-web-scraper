@@ -17,6 +17,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("org.jsoup:jsoup:1.16.1")
+    implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
 }
 
 tasks.test {
